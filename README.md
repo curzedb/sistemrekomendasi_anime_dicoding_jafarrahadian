@@ -372,19 +372,207 @@ Terakhir, memeriksa missing value pada dataset `rating_df`, berikut hasilnya:
 |  rating  | 0 |
 
 Insight:
+
 Dapat disimpulkan bahwa dataset `rating_df` tidak memiliki missing value.
 
 ### **Distribusi Rating**
+Distribusi rating digunakan untuk memudahkan proses Exploratory Data Analysis, langkah pertama yaitu dengan menggabungkan kedua dataset lalu dapat dianalisis lebih lanjut, berikut adalah tabel hasil penggabungan dataset `rating_df` dan `anime_df`:
 
+|   | anime_id |           name |                                genre |  type | episodes | rating | members | user_id | rating_user |
+|--:|---------:|---------------:|-------------------------------------:|------:|---------:|-------:|--------:|--------:|------------:|
+| 0 |    32281 | Kimi no Na wa. | Drama, Romance, School, Supernatural | Movie |        1 |   9.37 |  200630 |      99 |           5 |
+| 1 |    32281 | Kimi no Na wa. | Drama, Romance, School, Supernatural | Movie |        1 |   9.37 |  200630 |     152 |          10 |
+| 2 |    32281 | Kimi no Na wa. | Drama, Romance, School, Supernatural | Movie |        1 |   9.37 |  200630 |     244 |          10 |
+| 3 |    32281 | Kimi no Na wa. | Drama, Romance, School, Supernatural | Movie |        1 |   9.37 |  200630 |     271 |          10 |
+| 4 |    32281 | Kimi no Na wa. | Drama, Romance, School, Supernatural | Movie |        1 |   9.37 |  200630 |     278 |          -1 |
+
+Insight:
+- Dari kelima baris tersebut Anime **"Kimi no Na wa."** (`anime_id=32281`) memiliki rerata rating yang tinggi dengan rating (**9.37**) dari `anime_df`.
+-  Beberapa rating user: 5, 10, 10, 10, -1 (terlihat perbedaan antara rating rerata dan individu).
+-  Setiap baris menggabungkan **info anime + rating spesifik dari seorang user**.
+
+Berikut adalah gambaran mengenai distribusi **rating rata-rata** anime yang dapat dilihat pada gambar dibawah:
+![image](https://github.com/user-attachments/assets/40cf6d76-4754-451b-992e-ba7fdc12acd9)
+
+Insight mengenai gambar distribusi rating rata-rata anime:
+- Keseluruhan anime memiliki rating rata-rata diantara angka 6 sampai dengan 7.5
+- Tidak ditemukannya **OUTLIERS** pada feature rating rerata anime
+
+Berikut adalah gambaran mengenai distribusi **rating_user** yang dapat dilihat pada gambar dibawah:
+![image](https://github.com/user-attachments/assets/4caee06d-48f1-43c0-b349-41e63af9cfbe)
+
+Insight mengenai gambar distribusi ***rating by user***:
+- User rata-rata memberi rating diantara angka 7 sampai dengan 9
+- Dari informasi yang saya dapat dari sumber dataset, -1 artinya user tidak memberi rating dan hanya menonton. Maka dari itu -1 masuk kedalam outliers dan dapat di **DROP** di proses **Preparation Data**
 
 ### **Distribusi Kategori Anime**
-### **Analisis: 10 Anime dengan Member Paling Banyak**
-### **Analisis: 10 Anime dengan Member Paling Sedikit**
-### **Analisis: 10 Anime dengan Rating Paling Tinggi**
-### **Analisis: 10 Anime dengan Rating Paling Rendah**
-### **Analisis: Sebaran Genre Anime**
-### **Wordcloud Genre Anime**
+Distribusi kategori anime dilakukan untuk mengetahui sebaran jenis kategori anime terhadap jumlah anime, beikut adalah tabelnya:
 
+|   |    Type | Count |
+|--:|--------:|------:|
+| 0 |      TV |  3787 |
+| 1 |     OVA |  3311 |
+| 2 |   Movie |  2348 |
+| 3 | Special |  1676 |
+| 4 |     ONA |   659 |
+| 5 |   Music |   488 |
+
+Berdasarkan tabel sebaran kategori anime dapat diketahui bahwa:
+- Dominasi konten berupa **serial TV** dan **OVA**.
+- Produksi **film anime** cukup signifikan.
+- Kategori langka seperti **ONA** dan **Music** bersama-sama <10%.
+
+Setelah itu untuk mengetahui persentase sebaran kategori anime maka dibutuhkannya piechart, berikut adalah gambarannya:
+
+![image](https://github.com/user-attachments/assets/a84aba6c-a8ff-495d-8f88-c270362d6bd0)
+
+**Interpretasi Hasil**:
+
+| Type     | Count | Persentase | Keterangan                              |
+|----------|-------|------------|-----------------------------------------|
+| **TV**     | 3787  | ~30.8%     | Serial TV reguler                       |
+| **OVA**    | 3311  | ~26.9%     | Original Video Animation (rilis langsung)|
+| **Movie**  | 2348  | ~19.1%     | Film anime                              |
+| **Special**| 1676  | ~13.6%     | Episode spesial/OVA pendek              |
+| **ONA**    | 659   | ~5.4%      | Original Net Animation (streaming)      |
+| **Music**  | 488   | ~4.0%      | Video musik anime                       |
+
+**Insight** Piechart distribusi kategori anime:
+- Konten anime terbanyak adalah untuk kategori TV dengan persentase sebesar 30.87%
+- Konten anime paling sedikit adalah untuk kategori Music dengan persentase sebesar 3.98%
+- Rata-rata konten berisi kategori TV, OVA, dan Movie dengan persentase ketiga kategori tersebut sekitar 77%
+
+### **Analisis: Distribusi `user_rating` terhadap Kategori Anime**
+Berikut adalah grafik distribusi user_rating terhadap karegori anime:
+
+![image](https://github.com/user-attachments/assets/f3d24cc6-4286-4a91-82ba-756aef9a8ffe)
+
+**Insight** untuk grafik distribusi user rating terhadap kategori anime:
+- Terlihat bahwa seperti pada tahapan analisis-analisis sebelumnya, -1 merupakan outliers yang harus dihapus(DROP) karena membuat inkonsistensi rating
+- Berikut adalah jumlah untuk rating tertinggi pada setiap kategori(tanpa melihat angka -1):
+  - Kategori Movie  : rating terbanyak yaitu berada di angka 8
+  - Kategori TV     : rating terbanyak yaitu berada di angka 8
+  - Kategori OVA    : rating terbanyak yaitu berada di angka 7
+  - Kategori Special: rating terbanyak yaitu berada di angka 7
+  - Kategori Music  : rating terbanyak yaitu berada di angka 7
+  - Kategori ONA    : rating terbanyak yaitu berada di angka 7
+  
+### **Analisis: Distribusi Rating Rerata (`rating`) terhadap Kategori Anime**
+Berikut adalah grafik distribusi rating rerata terhadap kategori anime:
+
+![image](https://github.com/user-attachments/assets/cad691a7-1989-4386-b98c-e4c377932e11)
+
+**Insight** untuk grafik distribusi rating rerata anime terhadap kategori anime:
+- Tidak ditemukannya outliers.
+- Berikut adalah nilai rerata untuk rating pada setiap kategori:
+  - Kategori Movie  : rating terbanyak yaitu berada di angka 6.5 - 7.5
+  - Kategori TV     : rating terbanyak yaitu berada di angka 6.5 - 7.5
+  - Kategori OVA    : rating terbanyak yaitu berada di angka 6.5
+  - Kategori Special: rating terbanyak yaitu berada di angka 6.5
+  - Kategori Music  : rating terbanyak yaitu berada di angka 5.7 - 5.9
+  - Kategori ONA    : rating terbanyak yaitu berada di angka 6
+
+### **Analisis: 10 Anime dengan Member Paling Banyak**
+Berikut adalah 10 judul anime dengan member terbanyak yang dapat dilihat pada gambar dibawah:
+
+![image](https://github.com/user-attachments/assets/60c08a79-fb16-4acc-891c-12386a6c0f59)
+
+**Insight** dari grafik 10 anime dengan member terbanyak:
+- Anime dengan member terbanyak adalah anime Death Note dengan member sebanyak lebih dari 1 juta user
+- 10 Anime dengan member terbanyak jika digabungkan memiliki rerata jumlah user sekitar 700 ribu user
+
+***Member merupakan user yang mengikuti anime tersebut pada website myanimelist***
+
+### **Analisis: 10 Anime dengan Member Paling Sedikit**
+Berikut adalah 10 judul anime dengan member paling sedikit yang dapat dilihat pada gambar dibawah:
+
+![image](https://github.com/user-attachments/assets/2a94a22c-2412-49f9-928e-6e4dcf7a5371)
+
+**Insight** dari grafik 10 anime dengan member paling sedikit:
+- Anime dengan member paling sedikit No. 1 dengan judul Gou-chan dengan member berjumlah 5 user
+- 10 Anime dengan member paling sedikit jika digabungkan memiliki rerata member sekitar 15 user
+
+### **Analisis: 10 Anime dengan Rating Paling Tinggi**
+Berikut adalah grafik untuk menampilkan 10 anime dengan rating rerata tertinggi yang dapat dilihat pada gambar dibawah:
+
+![image](https://github.com/user-attachments/assets/49a9bc21-94a8-41b0-8039-180a305973f0)
+
+**Insight** dari grafik Top 10 Rating(Average) Anime:
+- Anime dengan rating rerata tertinggi adalah anime Mogura no Motoro dengan rating rerata 9.50 dari 10.00
+- Grafik 10 anime terbaik memiliki rerata nilai rating sekitar 9.25 dari 10.00
+
+### **Analisis: 10 Anime dengan Rating Paling Rendah**
+
+Berikut adalah grafik yang menampilkan 10 anime dengan rating terendah yang dapat dilihat pada gambar dibawah:
+
+![image](https://github.com/user-attachments/assets/b4f013d2-d588-4875-9b1a-4e2c273b06d9)
+
+**Insight** dari grafik 10 Rating(Average) anime terendah:
+- Anime dengan rating rerata terendah berjudul Platonic Chain dengan nilai rating 1.67 dari 10.00
+- Grafik 10 anime terburuk memiliki rerata nilai rating sekitar 2.25 dari 10.00
+
+### **Analisis: Sebaran Genre Anime**
+Sebaran genre anime dapat berguna untuk proses modeling nantinya, berikut merupakan list sebaran genre anime:
+
+|    |         Genre | Count |
+|---:|--------------:|------:|
+|  0 |        Action |  2845 |
+|  1 |     Adventure |  2348 |
+|  2 |          Cars |    72 |
+|  3 |        Comedy |  4645 |
+|  4 |      Dementia |   240 |
+|  5 |        Demons |   294 |
+|  6 |         Drama |  2016 |
+|  7 |         Ecchi |   637 |
+|  8 |       Fantasy |  2309 |
+|  9 |          Game |   181 |
+| 10 |         Harem |   317 |
+| 11 |        Hentai |  1141 |
+| 12 |    Historical |   806 |
+| 13 |        Horror |   369 |
+| 14 |         Josei |    54 |
+| 15 |          Kids |  1609 |
+| 16 |         Magic |   778 |
+| 17 |  Martial Arts |   265 |
+| 18 |         Mecha |   944 |
+| 19 |      Military |   426 |
+| 20 |         Music |   860 |
+| 21 |       Mystery |   495 |
+| 22 |        Parody |   408 |
+| 23 |        Police |   197 |
+| 24 | Psychological |   229 |
+| 25 |       Romance |  1464 |
+| 26 |       Samurai |   148 |
+| 27 |        School |  1220 |
+| 28 |        Sci-Fi |  2070 |
+| 29 |        Seinen |   547 |
+| 30 |        Shoujo |   603 |
+| 31 |     Shoujo Ai |    55 |
+| 32 |       Shounen |  1711 |
+| 33 |    Shounen Ai |    65 |
+| 34 | Slice of Life |  1220 |
+| 35 |         Space |   381 |
+| 36 |        Sports |   543 |
+| 37 |   Super Power |   465 |
+| 38 |  Supernatural |  1037 |
+| 39 |      Thriller |    87 |
+| 40 |       Vampire |   102 |
+| 41 |          Yaoi |    39 |
+| 42 |          Yuri |    42 |
+
+**Insight** dari tabel genre:
+- Genre Comedy adalah yang paling populer (4.645 kemunculan), diikuti oleh Action (2.845) dan Fantasy (2.309),
+- Genre seperti Yaoi (39) dan Yuri (42) termasuk yang paling jarang muncul, memberikan insight tentang preferensi konten dalam industri anime.
+
+### **Wordcloud Genre Anime**
+Wordcloud berguna untuk memvisualisasikan frekuensi kata-kata dalam sebuah teks. Kata-kata yang paling sering muncul ditampilkan dalam ukuran yang lebih besar (khususnya untuk studi kasus ini untuk mengetahui sebaran genre anime), berikut gambarnya:
+
+ ![image](https://github.com/user-attachments/assets/acd208b6-55a3-4a8f-8efa-a7017110c5e3)
+
+**Insight** dari wordcloud genre:
+- Yang muncul paling besar adalah genre Comedy, diikuti genre Action serta adventure
+- Sementara itu kata yang paling kecil yang dapat saya lihat pada wordcloud adalah genre Cars dan genre Thriller
+  
 ## **DATA PREPARATION**
 ### **Data Cleaning (Menghapus Missing Value, Duplikat, dan Outlier)**
 ### **Encoding Data - Content-Based Filtering**
