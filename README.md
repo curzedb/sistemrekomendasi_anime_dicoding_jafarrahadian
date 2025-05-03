@@ -28,22 +28,56 @@ Daftar Pustaka:<br>
 
 ### **Problem Steatment**:
 
-* **Kelebihan Pilihan Konten:** Pengguna anime menghadapi jumlah pilihan yang sangat besar (beragam genre dan judul), yang dapat menimbulkan *decision fatigue* dan kebingungan dalam memilih.
-* **Kurangnya Personalisasi:** Banyak layanan anime belum memberikan rekomendasi personalisasi yang memadai, sehingga pengguna sulit menemukan anime baru yang sesuai selera mereka.
-* **Akurasi Rekomendasi Rendah:** Jika rekomendasi tidak akurat, pengguna bisa kecewa dan kehilangan kepercayaan pada sistem. Rekomendasi yang kurang relevan justru menurunkan kepuasan pengguna.
+- **Kelebihan Pilihan Konten:** Pengguna anime menghadapi jumlah pilihan yang sangat besar (beragam genre dan judul), yang dapat menimbulkan *decision fatigue* dan kebingungan dalam memilih.
+- **Kurangnya Personalisasi:** Banyak layanan anime belum memberikan rekomendasi personalisasi yang memadai, sehingga pengguna sulit menemukan anime baru yang sesuai selera mereka.
+- **Akurasi Rekomendasi Rendah:** Jika rekomendasi tidak akurat, pengguna bisa kecewa dan kehilangan kepercayaan pada sistem. Rekomendasi yang kurang relevan justru menurunkan kepuasan pengguna.
 
 ### **Goals**:
 
-* **Personalisasi Rekomendasi:** Mengembangkan sistem rekomendasi anime yang dapat mempersonalisasi saran berdasarkan preferensi dan riwayat pengguna(Memanfaatkan data interaksi (rating) dan konten judul anime agar platform anime dapat lebih kompetitif dalam meningkatkan retensi pengguna serta memanfaatkan model neural network seperti recommendernet untuk melakukan rekomendasi).
-* **Meningkatkan Akurasi:** Menjamin tingkat akurasi tinggi pada rekomendasi untuk memaksimalkan kepuasan dan keterlibatan pengguna.
-* **Mengurangi Dampak *Paradox of Choice*:** Menyajikan daftar anime terkurasi yang relevan bagi setiap pengguna, sehingga mengurangi kebingungan akibat banyaknya pilihan.
+- **Personalisasi Rekomendasi:** Mengembangkan sistem rekomendasi anime yang dapat mempersonalisasi saran berdasarkan preferensi dan riwayat pengguna(Memanfaatkan data interaksi (rating) dan konten judul anime agar platform anime dapat lebih kompetitif dalam meningkatkan retensi pengguna serta memanfaatkan model neural network seperti recommendernet untuk melakukan rekomendasi).
+- **Meningkatkan Akurasi:** Menjamin tingkat akurasi tinggi pada rekomendasi untuk memaksimalkan kepuasan dan keterlibatan pengguna.
+- **Mengurangi Dampak *Paradox of Choice*:** Menyajikan daftar anime terkurasi yang relevan bagi setiap pengguna, sehingga mengurangi kebingungan akibat banyaknya pilihan.
 
 ### **Solution statements**:
 
-* **Collaborative Filtering (RecommenderNet):** Pendekatan ini memanfaatkan data interaksi (rating) pengguna dengan anime untuk menemukan pola kesamaan antar pengguna dan anime. Model *RecommenderNet* berbasis *neural network* (Keras) akan dibuat, di mana masing-masing pengguna dan anime direpresentasikan sebagai vektor *embedding*, lalu hasil *dot product* dilengkapi bias untuk memprediksi rating. Metode ini mirip dengan contoh yang diberikan Keras untuk rekomendasi film menggunakan dataset MovieLens. Pendekatan kolaboratif ini diharapkan menangkap preferensi kolektif pengguna sehingga mampu memberikan rekomendasi yang relevan dan akurat.
-* **Content-Based Filtering (TF-IDF pada Judul):** Pendekatan ini menggunakan konten anime — dalam hal ini judul anime — untuk menghitung kemiripan antar item. Setiap judul diubah menjadi vektor fitur menggunakan *TF-IDF* (Term Frequency–Inverse Document Frequency), sehingga kata-kata unik dalam judul memiliki bobot lebih tinggi. Rekomendasi dibuat dengan mencari anime lain yang memiliki kemiripan kosinus tinggi berdasarkan bobot TF-IDF kata di judul. Dengan demikian, sistem dapat merekomendasikan anime baru yang kata-kata judulnya mirip dengan judul anime yang disukai pengguna.
+- **Collaborative Filtering (RecommenderNet):** Pendekatan ini memanfaatkan data interaksi (rating) pengguna dengan anime untuk menemukan pola kesamaan antar pengguna dan anime. Model *RecommenderNet* berbasis *neural network* (Keras) akan dibuat, di mana masing-masing pengguna dan anime direpresentasikan sebagai vektor *embedding*, lalu hasil *dot product* dilengkapi bias untuk memprediksi rating. Metode ini mirip dengan contoh yang diberikan Keras untuk rekomendasi film menggunakan dataset MovieLens. Pendekatan kolaboratif ini diharapkan menangkap preferensi kolektif pengguna sehingga mampu memberikan rekomendasi yang relevan dan akurat.
+- **Content-Based Filtering (TF-IDF pada Judul):** Pendekatan ini menggunakan konten anime — dalam hal ini judul anime — untuk menghitung kemiripan antar item. Setiap judul diubah menjadi vektor fitur menggunakan *TF-IDF* (Term Frequency–Inverse Document Frequency), sehingga kata-kata unik dalam judul memiliki bobot lebih tinggi. Rekomendasi dibuat dengan mencari anime lain yang memiliki kemiripan kosinus tinggi berdasarkan bobot TF-IDF kata di judul. Dengan demikian, sistem dapat merekomendasikan anime baru yang kata-kata judulnya mirip dengan judul anime yang disukai pengguna.
+  
+**Untuk instalasi API, Framework, ataupun Library dapat dilakukan melalui file requirements.txt*
 
 ## **DATA UNDERSTANDING**
+Dataset yang digunakan dalam proyek ini merupakan dataset sistem rekomendasi anime (kartun dari negara jepang jika anda tidak paham apa itu anime) dengan hasil 2 file csv yaitu `anime.csv` dan `rating.csv`.
+
+### **Sumber Data**
+### **Deskripsi Dataset `anime.csv` dan `rating.csv`**
+### **Kondisi Data (Duplikat, Missing Value, dan Outlier)**
+### **Distribusi Rating**
+### **Distribusi Kategori Anime**
+### **Analisis: 10 Anime dengan Member Paling Banyak**
+### **Analisis: 10 Anime dengan Member Paling Sedikit**
+### **Analisis: 10 Anime dengan Rating Paling Tinggi**
+### **Analisis: 10 Anime dengan Rating Paling Rendah**
+### **Analisis: Sebaran Genre Anime**
+### **Wordcloud Genre Anime**
+
 ## **DATA PREPARATION**
+### **Data Cleaning (Menghapus Missing Value, Duplikat, dan Outlier)**
+### **Encoding Data - Content-Based Filtering**
+### **Dataframe Cosine Similarity**
+### **Menghapus Karakter Spesial pada Cosine Similarity**
+### **Pra-pemrosesan Teks Genre Anime**
+### **Normalisasi Rating**
+### **Encoding Data - Collaborative Filtering**
+### **Encoding Data - Memilih 150.000 Data**
+### **Split Dataset**
+### **Restrukturisasi Data**
+
 ## **MODELING**
+### **Content-Based Filtering**
+### **Collaborative Filtering**
+
 ## **EVALUATION**
+### **Penjelasan Matriks Evaluasi MSE**
+### **Penjelasan Matriks Evaluasi RMSE**
+### **Evaluasi Model Collaborative (RecommenderNet)**
+### **Kesimpulan**
