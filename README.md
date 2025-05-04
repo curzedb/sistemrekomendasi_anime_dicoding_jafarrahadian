@@ -574,10 +574,41 @@ Wordcloud berguna untuk memvisualisasikan frekuensi kata-kata dalam sebuah teks.
 - Sementara itu kata yang paling kecil yang dapat saya lihat pada wordcloud adalah genre Cars dan genre Thriller
   
 ## **DATA PREPARATION**
-### **Data Cleaning (Menghapus Missing Value, Duplikat, dan Outlier)**
+### **Data Cleansing (Menghapus Missing Value, Duplikat, dan Outlier)**
+Berikut adalah beberapa tahapan yang dilakukan untuk merapihkan data agar siap digunakan untuk proses modeling:
+- Menghapus Missing Value<br>
+  Penghapusan missing value dilakukan agar tidak ada data yang nilainya hilang dan mempersiapkannya untuk analisis lebih   lanjut. Ini penting karena nilai yang hilang dapat mengganggu hasil analisis dan algoritma machine learning. Tahapan ini menghapus nilai null di dataset `merged_df` (dataset gabungan dari `anime_df` dan `rating_df`) dengan menggunakan operasi 
+`merged_df.dropna(inplace=True)`. Untuk jumlah data null anda dapat melihatnya di tahapan **Data Understanding**.
+
+- Menghapus Data Duplikat<br>
+  Menghapus data duplikat (deduplikasi data) bertujuan untuk mengurangi jumlah data yang sama yang tersimpan dalam suatu sistem, sehingga menghemat ruang penyimpanan dan meningkatkan kinerja. Proses ini juga membantu memastikan akurasi dan kualitas data dengan menghilangkan redundansi. Tahapan ini menghapus data duplikat pada dataset `merged_df`, dengan menggunakan operasi `merged_df.drop_duplicates(inplace=True)`. Untuk jumlah data duplikat anda dapat melihatnya di tahapan **Data Understanding**.
+
+- Menghapus Outlier<br>
+  Menghapus outlier dalam analisis data berfungsi untuk meningkatkan akurasi dan validitas hasil, terutama jika outlier tersebut disebabkan oleh kesalahan pengukuran atau kesalahan data. Penghapusan outlier dapat membantu model pembelajaran mesin bekerja lebih baik dan mengurangi bias dalam analisis statistik. Tahapan ini menghapus data outlier pada dataset dengan cara menghapus **rating_user dengan nilai -1** dengan menggunakan operasi `merged_df = merged_df[merged_df['rating_user'] != -1]`. Anda dapat melihat bagaimana rating_user yang memiliki nilai -1 ini "merusak analisis" pada tahapan **Data Understanding**.
+
 ### **Encoding Data - Content-Based Filtering**
+Teknik ini melakukan pemilihan data dengan hanya memilih anime dengan rating berdasarkan `user_id` diatas 40 rating, teknik ini berfungsi agar data yang digunakan tidak terlalu banyak karena dapat mengganggu performa hardware yang terbatas. Operasi yang digunakan menggunakan kode `selected_anime[selected_anime >= 40].index` kemudian menggabungkan kembali ke `merged_df`.
+
 ### **Dataframe Cosine Similarity**
+  Cosine similarity dalam konteks TF-IDF berfungsi untuk mengukur tingkat kesamaan antara dua dokumen berdasarkan representasi vektornya yang dihasilkan dari perhitungan TF-IDF. Berikut adalah bentuk dataframe cosine similarity yang akan dilakukan untuk tahapan modeling menggunakan TF-IDF **tanpa bermaksud untuk melakukan data understanding ataupun EDA**:
+ 
+|                                             user_id |   3 |   5 |   7 |  11 |  14 |  17 |  21 |  23 |  24 |  27 | ... | 73497 | 73499 | 73500 | 73501 | 73502 | 73503 | 73504 | 73507 | 73510 | 73515 |
+|----------------------------------------------------:|----:|----:|----:|----:|----:|----:|----:|----:|----:|----:|----:|------:|------:|------:|------:|------:|------:|------:|------:|------:|------:|
+|                                                name |     |     |     |     |     |     |     |     |     |     |     |       |       |       |       |       |       |       |       |       |       |
+|                    &quot;0&quot;                    | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+| &quot;Bungaku Shoujo&quot; Kyou no Oyatsu: Hatsukoi | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |  10.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+|          &quot;Bungaku Shoujo&quot; Memoire         | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   6.0 |   0.0 |
+|           &quot;Bungaku Shoujo&quot; Movie          | 0.0 | 0.0 | 0.0 | 0.0 | 8.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |  10.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+|                   &quot;Eiji&quot;                  | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+
+<br>
+Dapat dilihat bahwa masih terdapat karakter-karakter HTML dan XML seperti gambar dibawah jika anda melihat melalui notebook, maka dari itu di tahap berikutnya adalah dengan menghapus karakter-karakter tersebut.
+
+![image](https://github.com/user-attachments/assets/442a10c8-6d2f-4a67-833c-8fdeac54c947)
+
 ### **Menghapus Karakter Spesial pada Cosine Similarity**
+Menghapus karakter-karakter HTML dan XML berguna untuk standarisasi teks sebelum analisis lebih lanjut (seperti cosine similarity), karena karakter spesial atau format HTML dapat mengganggu perhitungan similarity atau visualisasi. Dengan menghilangkan noise seperti `.hack//` atau simbol HTML, judul anime menjadi lebih konsisten (contoh: `&quot;Naruto&quot;` menjadi `Naruto`).  
+
 ### **Pra-pemrosesan Teks Genre Anime**
 ### **Normalisasi Rating**
 ### **Encoding Data - Collaborative Filtering**
