@@ -805,3 +805,8 @@ Berdasarkan **problem statement** dan **goals** yang diidentifikasi, sistem reko
 Sistem ini telah mencapai tujuan awalnya, yakni **meningkatkan personalisasi dan akurasi rekomendasi**, sekaligus **mengurangi kebingungan pengguna** dalam memilih anime.
 
 Dengan pengembangan lebih lanjut (seperti hybrid filtering dan handling cold start), sistem dapat menjadi lebih robust dan semakin meningkatkan kepuasan pengguna(dapat dilakukan untuk proyek selanjutnya).
+
+----------------------------------------------------------------------------------
+Hal yang perlu di perhatikan:
+
+Saya menggunakan local runtime menggunakan Docker dan GPU local karena ketika saya menggunakan runtime dari colab RAM-nya kurang.
