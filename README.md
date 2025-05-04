@@ -655,10 +655,153 @@ Terakhir untuk tahapan **Data Preparation** adalah dengan melakukan transformasi
 
 ## **MODELING**
 ### **Content-Based Filtering**
-### **Collaborative Filtering**
+Pertama adalah dengan membangun sistem rekomendasi anime berbasis konten menggunakan cosine similarity dari fitur genre yang telah diubah menjadi vektor TF-IDF. Cara kerjanya yaitu pertama-tama pengguna memasukkan judul anime (misal: "one piece"), lalu sistem melakukan pencarian case-insensitive di database. Jika ditemukan satu hasil tepat (**mode otomatis**), sistem langsung menampilkan 5 rekomendasi anime dengan genre serupa menggunakan perhitungan `cosine_similarity` pada matriks TF-IDF (`tfv_matrix`). Jika judul ambigu atau memiliki multiple match (**mode manual**), pengguna diminta memilih dari daftar anime yang mirip sebelum sistem menampilkan rekomendasi. Proses rekomendasi dilakukan dengan membandingkan vektor genre anime target terhadap seluruh anime lain, kemudian mengurutkannya berdasarkan similarity score tertinggi. Outputnya menampilkan judul dan genre anime yang direkomendasikan (contoh: One Piece → anime dengan genre Action, Adventure). Komponen utama meliputi: (1) `cosine_similarity` untuk menghitung kemiripan antar vektor genre, (2) `get_recommendations()` sebagai fungsi utama pencarian otomatis, dan (3) `get_recommendations_manual()` sebagai fallback untuk penanganan judul ambigu.
+
+Contoh inputan:
+```
+Masukkan judul anime: one piece
+```
+Hasilnya:
+
+|      |                         name |                                             genre |
+|-----:|-----------------------------:|--------------------------------------------------:|
+|  137 | One Piece Film: Strong World | Action, Adventure, Comedy, Drama, Fantasy, Sho... |
+|  156 |            One Piece Film: Z | Action, Adventure, Comedy, Drama, Fantasy, Sho... |
+|  205 |         One Piece Film: Gold | Action, Adventure, Comedy, Drama, Fantasy, Sho... |
+|  938 |     One Piece: Heart of Gold | Action, Adventure, Comedy, Drama, Fantasy, Sho... |
+| 2428 |             Digimon Frontier | Action, Adventure, Comedy, Drama, Fantasy, Sho... |
+| 1132 |               Digimon Tamers |        Adventure, Comedy, Drama, Fantasy, Shounen |
+
+**Kelebihan**:
+1. Cepat karena berbasis perhitungan similarity
+2. Tidak memerlukan data rating (content-based murni)
+
+**Kekurangan**:
+1. Bergantung pada kualitas data genre
+2. Tidak mempertimbangkan preferensi user spesifik
+3. Rekomendasi kurang akurat untuk anime dengan genre generik
+
+### **Collaborative Filtering (RecommenderNet)**
+Model ini bekerja dengan mengimplementasikan **model neural collaborative filtering** dengan TensorFlow/Keras untuk sistem rekomendasi anime, dimana arsitekturnya terdiri dari **embedding layer** untuk user dan anime (dengan dimensi 50, inisialisasi _he_normal_, dan regularisasi L2), diikuti oleh perhitungan _dot product_ antara vektor user dan anime yang ditambah bias spesifik untuk masing-masing user/anime, kemudian diaktivasi menggunakan sigmoid untuk menghasilkan prediksi rating antara 0-1. Model ini di-compile dengan **loss function BinaryCrossentropy** dan optimizer Adam (_learning rate_ 0.001), lalu dilatih selama 10 epoch dengan batch size 16, dimana proses training menunjukkan tren penurunan loss yang stabil baik pada data latih maupun validasi (dari 0.6481 ke 0.5327 untuk training loss dan stagnan di sekitar 0.55 untuk validation loss), mengindikasikan model konvergen tanpa overfitting namun masih memiliki potensi peningkatan akurasi melalui tuning hyperparameter seperti dimensi embedding, learning rate, atau penambahan layer hidden.
+
+Hyperparameter yang Digunakan:
+
+| Hyperparameter        | Nilai/Nama                  | Fungsi                                                                 |
+|-----------------------|-----------------------------|-----------------------------------------------------------------------|
+| `embedding_size`      | 50                          | Dimensi vektor latent user/anime                                      |
+| `learning_rate`       | 0.001                       | Langkah update optimizer Adam                                        |
+| `batch_size`         | 16                          | Jumlah sampel per update gradient                                   |
+| `epochs`             | 10                          | Iterasi pelatihan                                                   |
+| `regularization (L2)`| 1e-6                        | Penalty untuk mencegah overfitting pada embedding                   |
+| `loss function`      | BinaryCrossentropy          | Cocok untuk output sigmoid (rating 0-1)                             |
+| `optimizer`          | Adam                        | Adaptive momentum optimizer                                         |
+| `embeddings_initializer`| he_normal               | Inisialisasi weight embedding dengan distribusi normal termodifikasi|
+
+**Kelebihan Model**:
+1. Stabilitas Pelatihan
+   - Training loss turun konsisten dari **0.6481** ke **0.5327**, menunjukkan model berhasil belajar pola dari data.  
+   - Validation loss stabil di sekitar **0.55**, tidak ada lonjakan signifikan (**tidak overfitting**).  
+
+2. Generalization Cukup Baik
+   - Selisih tipis (~0.02) antara training loss dan validation loss di akhir pelatihan, menandakan model tidak hanya menghafal data latih.  
+
+3. Arsitektur Efisien
+   - Menggunakan **embedding + dot product** untuk menangkap hubungan user-anime, cocok untuk data sparse.  
+   - Regularisasi L2 (`l2(1e-6)`) membantu mencegah overfitting pada embedding.  
+
+4. Kinerja Cukup untuk Baseline
+   - Loss akhir **0.55** setara dengan akurasi ~75% jika dianggap klasifikasi biner (rating >0.5 direkomendasikan).  
+
+**Kekurangan Model**:
+1. Kapasitas Model Terbatas
+   - Dimensi embedding (`embedding_size=50`) mungkin terlalu kecil untuk dataset besar.  
+   - Tidak ada hidden layer tambahan untuk mempelajari pola non-linear kompleks.  
+
+2. Potensi Bias pada Data
+   - Tidak ada penanganan khusus untuk:  
+     - User/anime baru (**cold start problem**).  
+     - Ketidakseimbangan distribusi rating (misal: lebih banyak rating tinggi).  
+
+3. Hyperparameter Belum Optimal
+   - Learning rate (`0.001`) dan batch size (`16`) mungkin belum ideal.  
+   - Epoch (`10`) bisa ditambah dengan callback early stopping.  
+
+### **Membuat Rekomendasi menggunakan Model RecommenderNet**
+Membuat rekomendasi anime personalisasi dengan terlebih dahulu memvalidasi ID user, mengumpulkan daftar anime yang sudah ditonton user, lalu memprediksi rating untuk semua anime yang tersedia menggunakan model Collaborative Filtering. Hasil prediksi difilter untuk menghilangkan anime yang sudah ditonton, diurutkan berdasarkan rating tertinggi, dan diambil 5 rekomendasi teratas beserta judulnya, dengan proses mencakup konversi indeks ke ID asli dan pengecekan ketersediaan data.
+
+Berikut adalah hasilnya:
+```
+Masukkan ID User: 65318
+309/309 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step
+Rekomendasi Anime untuk User 65318:
+1. Kimi no Na wa.
+2. Gintama
+3. Ginga Eiyuu Densetsu
+4. Hajime no Ippo: New Challenger
+5. Haikyuu!!: Karasuno Koukou VS Shiratorizawa Gakuen Koukou
+```
 
 ## **EVALUATION**
+Matriks Evaluasi yang digunakan pada proyek ini diantaranya ada MSE dan RMSE. Berikut adalah penjelasan dari setiap matriks evaluasi yang digunakan:<br>
+
 ### **Penjelasan Matriks Evaluasi MSE**
+MSE mengukur rata-rata kuadrat selisih antara nilai prediksi dan nilai aktual. Semakin tinggi nilai MSE maka semakin jauh prediksi model dari nilai aktual, yang berarti akurasi model menurun. Rumusnya: <br>
+
+$$
+\text{MSE} = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2
+$$
+
 ### **Penjelasan Matriks Evaluasi RMSE**
+Root Mean Square Error atau disingkat RMSE merupakan hasil dari penjumlahan kuadrat error(Mean Square Error), perbedaan antar nilai asli dengan nilai prediksi akan dibagi dengan hasil penjumlahan yang akan diperoleh dari waktu peramalan. Semakin nilai RMSE mendekati nol, maka semakin baik kualitas hasil prediksi data tersebut, RMSE dirumuskan dengan: <br>
+
+$$
+\text{RMSE} = \sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}
+$$
+
 ### **Evaluasi Model Collaborative (RecommenderNet)**
+Berdasarkan gambar dibawah, dimana tren ideal menunjukkan kedua loss menurun secara stabil dan konvergen di akhir epoch, sedangkan jika validation loss mulai naik bisa mengindikasikan overfitting, atau jika kedua loss tetap tinggi menandakan underfitting, sehingga berguna untuk menentukan penghentian pelatihan lebih awal (early stopping) atau penyesuaian hyperparameter. Berdasarkan pada grafik tersebut model dapat dikatakan goodfit.
+
+![image](https://github.com/user-attachments/assets/195bb4a5-50d4-4b26-bf30-e516e706e5c2)
+
+Kemudian untuk matriks evaluasi, model tersebut bekerja dengan sangat baik. Dengan **MSE 0.0235** dan **RMSE 0.1532**, yang tergolong sangat baik untuk sistem rekomendasi. Nilai RMSE 0.1532 mengindikasikan rata-rata kesalahan prediksi hanya **±0.15 poin** dari skala rating (misalnya pada skala 1-10), sehingga model ini hampir sempurna dalam memprediksi preferensi pengguna. Semakin mendekati 0, semakin akurat model tersebut, dan hasil ini membuktikan keandalan sistem dalam memberikan rekomendasi yang sesuai.
+```
+Mean Squared Error (MSE): 0.023472699529523525
+Root Mean Squared Error (RMSE): 0.15320802697484073
+```
+
 ### **Kesimpulan**
+
+Berdasarkan **problem statement** dan **goals** yang diidentifikasi, sistem rekomendasi anime berbasis **Collaborative Filtering (RecommenderNet)** dan **Content-Based Filtering (TF-IDF)** berhasil memberikan solusi untuk mengatasi tantangan utama, yaitu:  
+
+1. **Mengurangi *Decision Fatigue* dan *Paradox of Choice***  
+   - Dengan memanfaatkan **Collaborative Filtering**, sistem dapat menyajikan rekomendasi yang dipersonalisasi berdasarkan riwayat rating pengguna, seperti yang terlihat pada hasil rekomendasi untuk User 65318 (*"Kimi no Na wa."*, *"Gintama"*, dll). Ini membantu pengguna menghindari kebingungan dalam memilih dari ribuan opsi.  
+   - **Content-Based Filtering** (TF-IDF) juga membantu dengan merekomendasikan anime yang mirip berdasarkan genre, sehingga pengguna tidak perlu menjelajahi katalog secara manual.  
+
+2. **Meningkatkan Personalisasi**  
+   - Model **RecommenderNet** (dengan embedding dan prediksi rating) menunjukkan akurasi tinggi dengan **RMSE 0.153**, yang berarti kesalahan prediksi hanya ±0.15 dari skala rating. Hal ini membuktikan bahwa pendekatan kolaboratif mampu menangkap preferensi pengguna secara individual.  
+   - Hasil rekomendasi yang diberikan (contoh: anime populer seperti *"Haikyuu!!"* dan *"Gintama"*) juga relevan dengan preferensi pengguna, menunjukkan keberhasilan personalisasi.  
+
+3. **Memastikan Akurasi Rekomendasi**  
+   - Nilai **MSE 0.023** dan **RMSE 0.153** menunjukkan bahwa model memiliki tingkat kesalahan yang sangat rendah, sehingga rekomendasi yang dihasilkan dapat dipercaya.  
+   - Dengan menggabungkan **Collaborative** dan **Content-Based Filtering**, sistem tidak hanya mengandalkan data rating tetapi juga kemiripan konten, sehingga mengurangi risiko rekomendasi yang tidak relevan.  
+
+**Solusi yang Berhasil Diterapkan**  
+- **Collaborative Filtering (RecommenderNet)**  
+  - Berhasil memprediksi rating dengan akurasi tinggi (RMSE rendah).  
+  - Mampu memberikan rekomendasi spesifik untuk pengguna (contoh: User 65318).  
+- **Content-Based Filtering (TF-IDF)**  
+  - Memanfaatkan fitur teks (judul anime) untuk rekomendasi berbasis kemiripan.  
+  - Berguna ketika data rating terbatas (*cold start problem*).  
+
+**Keberhasilan dan Tantangan ke Depan**  
+- **Keberhasilan**:  
+  - Sistem berhasil mengurangi *overwhelming choice* dengan rekomendasi terkurasi.  
+  - Metrik evaluasi (MSE/RMSE) membuktikan keakuratan model.  
+- **Tantangan**:  
+  - **Cold Start Problem**: Pengguna/anime **BARU** masih sulit direkomendasikan. Solusi: Gabungkan dengan *hybrid filtering* atau data demografis.  
+
+
+### **Final Thought**  
+Sistem ini telah mencapai tujuan awalnya, yakni **meningkatkan personalisasi dan akurasi rekomendasi**, sekaligus **mengurangi kebingungan pengguna** dalam memilih anime.
+
+Dengan pengembangan lebih lanjut (seperti hybrid filtering dan handling cold start), sistem dapat menjadi lebih robust dan semakin meningkatkan kepuasan pengguna(dapat dilakukan untuk proyek selanjutnya).
