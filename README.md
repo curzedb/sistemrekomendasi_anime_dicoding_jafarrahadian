@@ -607,14 +607,51 @@ Dapat dilihat bahwa masih terdapat karakter-karakter HTML dan XML seperti gambar
 ![image](https://github.com/user-attachments/assets/442a10c8-6d2f-4a67-833c-8fdeac54c947)
 
 ### **Menghapus Karakter Spesial pada Cosine Similarity**
-Menghapus karakter-karakter HTML dan XML berguna untuk standarisasi teks sebelum analisis lebih lanjut (seperti cosine similarity), karena karakter spesial atau format HTML dapat mengganggu perhitungan similarity atau visualisasi. Dengan menghilangkan noise seperti `.hack//` atau simbol HTML, judul anime menjadi lebih konsisten (contoh: `&quot;Naruto&quot;` menjadi `Naruto`).  
+Menghapus karakter-karakter HTML dan XML berguna untuk standarisasi teks sebelum analisis lebih lanjut (seperti cosine similarity), karena karakter spesial atau format HTML dapat mengganggu perhitungan similarity atau visualisasi. Dengan menghilangkan noise seperti `.hack//` atau simbol HTML, judul anime menjadi lebih konsisten (contoh: `&quot;Naruto&quot;` menjadi `Naruto`). Berikut adalah hasil akhir dari cosine similarity tanpa bermaksud melakukan EDA dan Data Understanding:
+
+ |       user_id |   3 |   5 |   7 |  11 |  14 |  17 |  21 |  23 |  24 |  27 | ... | 73497 | 73499 | 73500 | 73501 | 73502 | 73503 | 73504 | 73507 | 73510 | 73515 |
+|--------------:|----:|----:|----:|----:|----:|----:|----:|----:|----:|----:|----:|------:|------:|------:|------:|------:|------:|------:|------:|------:|------:|
+|          name |     |     |     |     |     |     |     |     |     |     |     |       |       |       |       |       |       |       |       |       |       |
+|       0       | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+|      001      | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+| 009 Re:Cyborg | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+|     009-1     | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
+|  009-1: RandB | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | ... |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |   0.0 |
 
 ### **Pra-pemrosesan Teks Genre Anime**
+**TF-IDF Vectorizer** digunakan dalam pra-pemrosesan teks genre anime untuk membangun model rekomendasi berbasis konten (*content-based filtering*) dengan mengubah data teks genre menjadi representasi numerik berbobot. Metode ini menghitung *Term Frequency (TF)* untuk frekuensi kemunculan genre dalam suatu anime dan *Inverse Document Frequency (IDF)* untuk memberi bobot lebih pada genre yang lebih unik, sehingga mengurangi dampak genre yang terlalu umum. Hasilnya adalah matriks TF-IDF yang menggambarkan pentingnya setiap genre dalam konteks keseluruhan dataset. Dengan matriks ini, kesamaan antar anime dihitung menggunakan *cosine similarity*, memungkinkan sistem merekomendasikan anime dengan genre serupa. 
+
+Berikut adalah transformasi yang digunakan:
+   - Memisahkan string genre yang digabung (misal: `"Action, Comedy"` → `["Action", "Comedy"]`).  
+   - Mengonversi ke string (`astype(str)`) untuk kompatibilitas TF-IDF.  
+   - Membuat matriks TF-IDF (`tfv.fit_transform(genres)`) yang mengukur pentingnya kata dalam genre relatif terhadap koleksi anime.  
+
 ### **Normalisasi Rating**
+Proses normalisasi dilakukan untuk meringankan kinerja model, dengan cara mengubah skala rating asli menjadi rentang 0 hingga 1 menggunakan rumus `(x - min_rating) / (max_rating - min_rating)`, di mana `min_rating` dan `max_rating` masing-masing adalah nilai minimum dan maksimum dari data rating asli. Hasil normalisasi kemudian dikonversi ke tipe data float64 untuk memastikan konsistensi numerik, dan rating rata-rata setelah normalisasi dihitung menggunakan `np.mean`, yang dalam contoh ini menghasilkan nilai sekitar 0.75 (setara dengan rating asli ~7.75 jika skala awal 1-10). Hasilnya:
+```
+Avg 0.7514236999447645
+```
+
 ### **Encoding Data - Collaborative Filtering**
+Proses ini berguna untuk mengubah ID pengguna (`user_id`) dan ID anime (`anime_id`) yang asli menjadi indeks numerik berurutan melalui proses encoding, dimana dua dictionary mapping dibuat untuk masing-masing entity (`user2user_encoded` dan `anime2anime_encoded` untuk konversi ID ke indeks, serta `user_encoded2user` dan `anime_encoded2anime` untuk keperluan decoding kembali ke ID asli), kemudian menambahkan kolom baru `user` dan `anime` pada DataFrame yang berisi nilai terenkode tersebut. Proses ini menghasilkan statistik dataset yang menampilkan jumlah user unik (36,884) dan anime unik (9,877), serta range rating yang telah dinormalisasi antara 0.0 sampai 1.0, dimana transformasi ini bertujuan untuk mempermudah pemrosesan data oleh model machine learning dengan mengkonversi ID asli yang bernilai besar dan tidak berurutan menjadi indeks numerik yang lebih efisien. Hasilnya:
+```
+Num of users: 36884, Num of animes: 9877
+Min rating: 0.0, Max rating: 1.0
+```
+
 ### **Encoding Data - Memilih 150.000 Data**
+Proses ini berguna untuk menyiapkan data untuk pelatihan model rekomendasi dengan pertama-tama mengambil sampel acak sebanyak 150.000 baris dari dataset utama (`merged_df`) menggunakan `sample(n=150000, random_state=73)` untuk memastikan hasil yang konsisten, kemudian memisahkannya menjadi variabel fitur (`X`) yang berisi pasangan indeks pengguna dan anime dalam bentuk array numpy (diambil dari kolom `user` dan `anime`), serta variabel target (`y`) yang berisi nilai rating pengguna yang telah dinormalisasi (dari kolom `rating_user`), di mana struktur data ini dirancang khusus untuk algoritma collaborative filtering yang memerlukan input berupa pasangan user-item beserta ratingnya sebagai target prediksi.
+
 ### **Split Dataset**
+Proses ini berguna untuk melakukan **pembagian dataset** menjadi data latih (training) dan data validasi (validation) untuk keperluan pelatihan model machine learning, dengan fungsi `train_test_split` dari scikit-learn membagi data secara acak dengan proporsi 80% data latih (`X_train`, `y_train`) dan 20% data validasi (`X_val`, `y_val`), dimana parameter `random_state=73` menjamin pembagian yang konsisten setiap kali kode dijalankan. Variabel `X` (berisi pasangan user-anime) dan `y` (berisi rating) dibagi secara proporsional, lalu hasilnya ditampilkan dalam bentuk dimensi/shape melalui print statement, yang akan menampilkan output seperti `X_train shape: (120000, 2)` (120.000 sampel latih dengan 2 fitur) dan `X_val shape: (30000, 2)` (30.000 sampel validasi). Hasilnya:
+
+```
+X_train shape: (120000, 2), y_train shape: (120000,)
+X_val shape: (30000, 2), y_val shape: (30000,)
+```
+
 ### **Restrukturisasi Data**
+Terakhir untuk tahapan **Data Preparation** adalah dengan melakukan transformasi struktur data dengan memisahkan array 2D `X_train` dan `X_val` (yang berisi pasangan [user_index, anime_index]) menjadi dua array terpisah dalam bentuk list, di mana `data_train` dan `data_val` masing-masing menjadi list yang terdiri dari array pertama berisi semua user index (`X_train[:, 0]`) dan array kedua berisi semua anime index (`X_train[:, 1]`), sehingga mengubah format dari [[user1, anime1], [user2, anime2], ...] menjadi [[user1, user2, ...], [anime1, anime2, ...]] untuk memenuhi persyaratan input model neural network yang biasanya membutuhkan fitur user dan anime sebagai input terpisah ke dalam embedding layer, sekaligus mempertahankan korespondensi satu-satu antara user dan anime yang berpasangan dalam data asli.
 
 ## **MODELING**
 ### **Content-Based Filtering**
