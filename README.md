@@ -742,7 +742,7 @@ Rekomendasi Anime untuk User 65318:
 ```
 
 ## **EVALUATION**
-Matriks Evaluasi yang digunakan pada proyek ini diantaranya ada MSE dan RMSE. Berikut adalah penjelasan dari setiap matriks evaluasi yang digunakan:<br>
+Matriks Evaluasi yang digunakan pada proyek ini diantaranya ada MSE dan RMSE (untuk Collaborative-Based Filtering) serta Precision, Recall, F1-Score, dan Accuracy (untuk Content-Based Filtering). Berikut adalah penjelasan dari setiap matriks evaluasi yang digunakan:<br>
 
 ### **Penjelasan Matriks Evaluasi MSE**
 MSE mengukur rata-rata kuadrat selisih antara nilai prediksi dan nilai aktual. Semakin tinggi nilai MSE maka semakin jauh prediksi model dari nilai aktual, yang berarti akurasi model menurun. Rumusnya: <br>
@@ -758,6 +758,29 @@ $$
 \text{RMSE} = \sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}
 $$
 
+### **Penjelasan Precision (Presisi)**
+Mengukur proporsi prediksi positif yang benar TN (true positives) dibanding semua prediksi positif (baik true maupun false positives). Penting ketika biaya false positive tinggi (contoh: rekomendasi konten tidak pantas). Precision dirumuskan dengan:<br>
+
+Precision = True Positive / (True Positive + False Positive)
+
+### **Penjelasan Recall (Sensitifitas)**
+
+Mengukur kemampuan model menemukan semua instance positif yang relevan. Cocok untuk deteksi penyakit atau konten penting yang tidak boleh terlewat. Recall dirumuskan dengan:<br>
+
+Recall = True Positive / (True Positive + False Negative)
+
+### **Penjelasan F1-Score**
+
+Rata-rata harmonik dari precision dan recall. Menyeimbangkan keduanya. Optimal untuk dataset tidak seimbang (imbalanced classes). F1-Score dirumuskan dengan:<br>
+
+F1-Score = 2 * (Precision * Recall) / (Precision + Recall)
+
+### **Accuracy (Akurasi)**
+
+Proporsi prediksi benar (baik positif maupun negatif) dari total prediksi. Baik untuk dataset seimbang, tapi menyesatkan untuk imbalanced data. Accuracy dirumuskan dengan:<br>
+
+Accuracy = (True Positive + True Negative) / (True Positive + True Negative + False Positive + False Negative)
+
 ### **Evaluasi Model Collaborative (RecommenderNet)**
 Berdasarkan gambar dibawah, dimana tren ideal menunjukkan kedua loss menurun secara stabil dan konvergen di akhir epoch, sedangkan jika validation loss mulai naik bisa mengindikasikan overfitting, atau jika kedua loss tetap tinggi menandakan underfitting, sehingga berguna untuk menentukan penghentian pelatihan lebih awal (early stopping) atau penyesuaian hyperparameter. Berdasarkan pada grafik tersebut model dapat dikatakan goodfit.
 
@@ -769,7 +792,49 @@ Mean Squared Error (MSE): 0.023472699529523525
 Root Mean Squared Error (RMSE): 0.15320802697484073
 ```
 
+### **Evaluasi Model Content-Based (TF-IDF)**
+
+Metrik evaluasi menunjukkan performa sistem rekomendasi berbasis genre dengan **precision sempurna (1.0)**, artinya semua genre yang diprediksi benar (tidak ada kesalahan positif), contohnya ketika sistem memprediksi genre "Action", genre tersebut memang sesuai dengan label asli. Namun, **recall (0.833)** mengindikasikan sistem hanya berhasil mendeteksi **83.3% genre yang seharusnya**, seperti pada kasus "Death Note" yang seharusnya bergenre "Mystery, Supernatural" tetapi hanya terdeteksi "Mystery". **F1-score (0.909)** menyeimbangkan precision dan recall, menunjukkan konsistensi model. Sementara itu, **accuracy (0.666)** yang lebih rendah mencerminkan hanya **66.6% sampel (2 dari 3 anime)** yang seluruh genrenya diprediksi dengan benar, karena sistem masih gagal menangkap semua genre pada beberapa kasus. Hasil ini menegaskan bahwa model sangat presisi tetapi masih perlu peningkatan dalam mencakup lebih banyak genre relevan. Berikut adalah hasilnya:
+```
+Precision: 1.0
+Recall: 0.8333333333333334
+F1-score: 0.9090909090909091
+Accuracy: 0.6666666666666666
+```
+
 ### **Kesimpulan**
+
+**Kesimpulan dan Kaitan dengan Hasil yang Didapatkan**
+
+Berdasarkan analisis performa kedua pendekatan, berikut perbandingan antara **Collaborative Filtering** (model RecommenderNet) dan **Content-Based Filtering** (TF-IDF):  
+
+**1. Collaborative Filtering (RecommenderNet)**  
+**Kelebihan**:  
+- **Personalisasi Tinggi**:  
+  - Berdasarkan riwayat rating pengguna (contoh: User 65318 direkomendasikan *"Kimi no Na wa."* dan *"Gintama"*).  
+  - Metrik akurasi **RMSE 0.153** (kesalahan ±0.15 skala rating) membuktikan prediksi sangat presisi.  
+- **Cocok untuk Pengguna Aktif**:  
+  - Efektif jika data rating melimpah.  
+
+**Kekurangan**:  
+- **Cold Start Problem**:  
+  - Gagal memberikan rekomendasi untuk anime/pengguna baru (tanpa riwayat rating).  
+- **Ketergantungan Data**:  
+  - Membutuhkan dataset rating yang besar dan padat.  
+
+**2. Content-Based Filtering (TF-IDF)**  
+**Kelebihan**:  
+- **Tangani Cold Start**:  
+  - Merekomendasikan anime berdasarkan kemiripan genre (contoh: *"One Piece"* → *"Naruto"*).  
+  - Evaluasi metrik menunjukkan **precision sempurna (1.0)** dan **F1-score 0.91**.  
+- **Independen dari Riwayat Pengguna**:  
+  - Berguna ketika data rating terbatas.  
+
+**Kekurangan**:  
+- **Keterbatasan Fitur Genre**:  
+  - **Recall 0.833** menunjukkan sistem mungkin melewatkan beberapa genre relevan (misal: hanya memprediksi *"Mystery"* untuk *"Death Note"* yang seharusnya *"Mystery, Supernatural"*).  
+- **Kurang Personalisasi**:  
+  - Tidak mempertimbangkan preferensi individual pengguna.  
 
 Berdasarkan **problem statement** dan **goals** yang diidentifikasi, sistem rekomendasi anime berbasis **Collaborative Filtering (RecommenderNet)** dan **Content-Based Filtering (TF-IDF)** berhasil memberikan solusi untuk mengatasi tantangan utama, yaitu:  
 
@@ -779,7 +844,7 @@ Berdasarkan **problem statement** dan **goals** yang diidentifikasi, sistem reko
 
 2. **Meningkatkan Personalisasi**  
    - Model **RecommenderNet** (dengan embedding dan prediksi rating) menunjukkan akurasi tinggi dengan **RMSE 0.153**, yang berarti kesalahan prediksi hanya ±0.15 dari skala rating. Hal ini membuktikan bahwa pendekatan kolaboratif mampu menangkap preferensi pengguna secara individual.  
-   - Hasil rekomendasi yang diberikan (contoh: anime populer seperti *"Haikyuu!!"* dan *"Gintama"*) juga relevan dengan preferensi pengguna, menunjukkan keberhasilan personalisasi.  
+   - Hasil rekomendasi yang diberikan (contoh: anime populer seperti *"Kimi no Nawa"* dan *"Gintama"*) juga relevan dengan preferensi pengguna, menunjukkan keberhasilan personalisasi.  
 
 3. **Memastikan Akurasi Rekomendasi**  
    - Nilai **MSE 0.023** dan **RMSE 0.153** menunjukkan bahwa model memiliki tingkat kesalahan yang sangat rendah, sehingga rekomendasi yang dihasilkan dapat dipercaya.  
@@ -796,13 +861,14 @@ Berdasarkan **problem statement** dan **goals** yang diidentifikasi, sistem reko
 **Keberhasilan dan Tantangan ke Depan**  
 - **Keberhasilan**:  
   - Sistem berhasil mengurangi *overwhelming choice* dengan rekomendasi terkurasi.  
-  - Metrik evaluasi (MSE/RMSE) membuktikan keakuratan model.  
+  - Metrik evaluasi (MSE/RMSE) membuktikan keakuratan model.
+  - Model TF-IDF memiliki Precision sempurna (1.0) dalam prediksi genre  
 - **Tantangan**:  
   - **Cold Start Problem**: Pengguna/anime **BARU** masih sulit direkomendasikan. Solusi: Gabungkan dengan *hybrid filtering* atau data demografis.  
 
 
-### **Final Thought**  
-Sistem ini telah mencapai tujuan awalnya, yakni **meningkatkan personalisasi dan akurasi rekomendasi**, sekaligus **mengurangi kebingungan pengguna** dalam memilih anime.
+**Final Thought**  
+Sistem ini telah mencapai tujuan awalnya, yakni **meningkatkan personalisasi dan akurasi rekomendasi**, sekaligus **mengurangi kebingungan pengguna** dalam memilih anime. Kedua metode memiliki trade-off yang jelas. Pemilihan tergantung pada **konteks data** dan **tujuan bisnis**. Evaluasi ini membuktikan bahwa Collaborative Filtering ideal untuk personalisasi berbasis pengguna, sementara Content-Based Filtering solutif untuk rekomendasi berbasis konten ketika data terbatas.
 
 Dengan pengembangan lebih lanjut (seperti hybrid filtering dan handling cold start), sistem dapat menjadi lebih robust dan semakin meningkatkan kepuasan pengguna(dapat dilakukan untuk proyek selanjutnya).
 
